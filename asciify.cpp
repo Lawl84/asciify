@@ -1,13 +1,16 @@
-#include <iostream>
 #include <string>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+#include <iostream>
+#include <sstream>
+
 
 bool isbetween(int a, int b, int c)
 {
     return c > a && c < b;
 }
+
 std::vector<int> get_intensities(const cv::Mat& img)
 {
     std::vector<int> intensities;
@@ -30,34 +33,47 @@ std::vector<int> get_intensities(const cv::Mat& img)
     }
     return intensities;
 }
-std::string asciify(std::string file, double scale=1)
+
+std::string asciify(cv::Mat img, int scale = 100)
 {
-    cv::Mat img = cv::imread(file);
     cv::Mat imgResized;
-    cv::resize(img, imgResized, cv::Size(img.rows * scale, img.cols * 0.5 * scale));
+    cv::resize(img, imgResized, cv::Size(std::floor(img.rows * scale/50), std::floor(img.cols * scale/100)));
     std::vector<int> intensities = get_intensities(imgResized);
     std::string output;
     for (int row_count = 0; row_count < imgResized.rows; row_count++)
     {
-        
+
         for (int col_count = 0; col_count < imgResized.cols; col_count++)
-        {   
+        {
             if (isbetween(-1, 51, intensities[(row_count * imgResized.cols + col_count)]))
-                output += '@';
+                output += ":";
             else if (isbetween(51, 102, intensities[(row_count * imgResized.cols + col_count)]))
-                output += '#';
+                output += "=";
             else if (isbetween(102, 153, intensities[(row_count * imgResized.cols + col_count)]))
-                output += '=';
+                output += "$";
             else if (isbetween(153, 204, intensities[(row_count * imgResized.cols + col_count)]))
-                output += ':';
+                output += "#";
             else if (isbetween(204, 256, intensities[(row_count * imgResized.cols + col_count)]))
-                output += '.';
-            
+                output += "@";
+            else
+                output += ".";
+
         }
         output += "\n";
     }
     return output;
 }
 
+int main(int argc, char* argv[])
+{
+    cv::Mat img = cv::imread(argv[1]);
+    int scale = 10;
+    std::cout << argv[2] << std::endl;
+    if (argv[2] == std::string("-s"))
+    {
+        std::stringstream str_scale(argv[3]);
+        str_scale >> scale;
+    }
 
-
+    std::cout << asciify(img, scale);
+}
